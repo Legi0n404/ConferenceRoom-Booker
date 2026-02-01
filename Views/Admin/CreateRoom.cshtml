@@ -1,0 +1,119 @@
+@model RoomViewModel
+@{
+    ViewData["Title"] = "Dodaj salę";
+}
+
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-action="Dashboard">Dashboard</a></li>
+            <li class="breadcrumb-item"><a asp-action="ManageRooms">Sale</a></li>
+            <li class="breadcrumb-item active">Dodaj salę</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="bi bi-plus-circle me-2"></i>Dodaj nową salę</h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="CreateRoom" method="post">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+                        
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label asp-for="Name" class="form-label"></label>
+                                <input asp-for="Name" class="form-control" placeholder="np. Sala Konferencyjna A" />
+                                <span asp-validation-for="Name" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="RoomNumber" class="form-label"></label>
+                                <input asp-for="RoomNumber" class="form-control" placeholder="np. 101" />
+                                <span asp-validation-for="RoomNumber" class="text-danger"></span>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label"></label>
+                            <textarea asp-for="Description" class="form-control" rows="3" 
+                                      placeholder="Opis sali, wyposażenia, przeznaczenia..."></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="Capacity" class="form-label"></label>
+                                <input asp-for="Capacity" type="number" class="form-control" min="1" max="500" />
+                                <span asp-validation-for="Capacity" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="PricePerHour" class="form-label"></label>
+                                <div class="input-group">
+                                    <input asp-for="PricePerHour" type="number" step="0.01" class="form-control" min="0" />
+                                    <span class="input-group-text">zł/h</span>
+                                </div>
+                                <span asp-validation-for="PricePerHour" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="Floor" class="form-label"></label>
+                                <input asp-for="Floor" type="number" class="form-control" min="0" max="100" />
+                                <span asp-validation-for="Floor" class="text-danger"></span>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="ImageUrl" class="form-label"></label>
+                            <input asp-for="ImageUrl" class="form-control" placeholder="https://..." />
+                            <span asp-validation-for="ImageUrl" class="text-danger"></span>
+                            <small class="text-muted">Podaj URL zdjęcia sali</small>
+                        </div>
+                        
+                        @if (Model.AvailableEquipment != null && Model.AvailableEquipment.Any())
+                        {
+                            <div class="mb-3">
+                                <label class="form-label">Wyposażenie</label>
+                                <div class="row">
+                                    @foreach (var eq in Model.AvailableEquipment)
+                                    {
+                                        <div class="col-md-4 col-6">
+                                            <div class="form-check">
+                                                <input type="checkbox" name="SelectedEquipmentIds" value="@eq.Id" 
+                                                       class="form-check-input" id="eq_@eq.Id"
+                                                       @(Model.SelectedEquipmentIds.Contains(eq.Id) ? "checked" : "")>
+                                                <label class="form-check-label" for="eq_@eq.Id">
+                                                    <i class="bi @eq.IconClass me-1"></i>@eq.Name
+                                                </label>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input asp-for="IsActive" class="form-check-input" />
+                                <label asp-for="IsActive" class="form-check-label"></label>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-plus-circle me-2"></i>Utwórz salę
+                            </button>
+                            <a asp-action="ManageRooms" class="btn btn-outline-secondary btn-lg">
+                                <i class="bi bi-x-circle me-2"></i>Anuluj
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

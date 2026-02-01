@@ -1,0 +1,139 @@
+@model Reservation
+@{
+    ViewData["Title"] = "Szczegóły rezerwacji";
+    
+    var badgeClass = Model.Status switch
+    {
+        ReservationStatus.Pending => "bg-warning text-dark",
+        ReservationStatus.Approved => "bg-success",
+        ReservationStatus.Rejected => "bg-danger",
+        ReservationStatus.Cancelled => "bg-secondary",
+        ReservationStatus.Completed => "bg-info",
+        _ => "bg-secondary"
+    };
+    var statusText = Model.Status switch
+    {
+        ReservationStatus.Pending => "Oczekująca",
+        ReservationStatus.Approved => "Zatwierdzona",
+        ReservationStatus.Rejected => "Odrzucona",
+        ReservationStatus.Cancelled => "Anulowana",
+        ReservationStatus.Completed => "Zakończona",
+        _ => "Nieznany"
+    };
+}
+
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-action="Dashboard">Dashboard</a></li>
+            <li class="breadcrumb-item"><a asp-action="ManageReservations">Rezerwacje</a></li>
+            <li class="breadcrumb-item active">Szczegóły #@Model.Id</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0"><i class="bi bi-calendar-event me-2"></i>@Model.Title</h4>
+                    <span class="badge @badgeClass fs-6">@statusText</span>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Użytkownik</h6>
+                            <p class="fs-5 mb-1">
+                                <i class="bi bi-person text-primary me-2"></i>@Model.User?.FullName
+                            </p>
+                            <p class="text-muted">@Model.User?.Email</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Sala</h6>
+                            <p class="fs-5">
+                                <i class="bi bi-door-open text-primary me-2"></i>@Model.Room?.Name
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Data</h6>
+                            <p class="fs-5">
+                                <i class="bi bi-calendar-event text-primary me-2"></i>
+                                @Model.StartDate.ToString("dddd, dd MMMM yyyy", new System.Globalization.CultureInfo("pl-PL"))
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Godziny</h6>
+                            <p class="fs-5">
+                                <i class="bi bi-clock text-primary me-2"></i>
+                                @Model.StartDate.ToString("HH:mm") - @Model.EndDate.ToString("HH:mm")
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Liczba uczestników</h6>
+                            <p class="fs-5">
+                                <i class="bi bi-people text-primary me-2"></i>@Model.NumberOfAttendees osób
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Koszt</h6>
+                            <p class="fs-4 fw-bold text-success">
+                                @Model.TotalCost.ToString("C", new System.Globalization.CultureInfo("pl-PL"))
+                            </p>
+                        </div>
+                    </div>
+                    
+                    @if (!string.IsNullOrEmpty(Model.Description))
+                    {
+                        <div class="mb-4">
+                            <h6 class="text-muted">Opis</h6>
+                            <p>@Model.Description</p>
+                        </div>
+                    }
+                    
+                    <hr>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <small class="text-muted">Utworzono: @Model.CreatedAt.ToString("dd.MM.yyyy HH:mm")</small>
+                        </div>
+                        @if (Model.ModifiedAt.HasValue)
+                        {
+                            <div class="col-md-6">
+                                <small class="text-muted">Zmodyfikowano: @Model.ModifiedAt.Value.ToString("dd.MM.yyyy HH:mm")</small>
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex gap-2">
+                        <a asp-action="ManageReservations" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i>Powrót
+                        </a>
+                        @if (Model.Status == ReservationStatus.Pending)
+                        {
+                            <form asp-action="UpdateReservationStatus" method="post" class="d-inline">
+                                <input type="hidden" name="Id" value="@Model.Id" />
+                                <input type="hidden" name="NewStatus" value="@ReservationStatus.Approved" />
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-check-lg me-1"></i>Zatwierdź
+                                </button>
+                            </form>
+                            <form asp-action="UpdateReservationStatus" method="post" class="d-inline">
+                                <input type="hidden" name="Id" value="@Model.Id" />
+                                <input type="hidden" name="NewStatus" value="@ReservationStatus.Rejected" />
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="bi bi-x-lg me-1"></i>Odrzuć
+                                </button>
+                            </form>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

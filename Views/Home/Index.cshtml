@@ -1,0 +1,205 @@
+@model List<Room>
+@{
+    ViewData["Title"] = "Strona główna";
+}
+
+<!-- Hero Section -->
+<section class="hero-section bg-primary text-white py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-3">
+                    <i class="bi bi-building me-3"></i>Rezerwacja Sal Konferencyjnych
+                </h1>
+                <p class="lead mb-4">
+                    Profesjonalny system rezerwacji sal konferencyjnych. 
+                    Znajdź idealną przestrzeń na spotkanie, szkolenie lub prezentację.
+                </p>
+                <div class="d-flex gap-3">
+                    <a asp-controller="Rooms" asp-action="Index" class="btn btn-light btn-lg">
+                        <i class="bi bi-search me-2"></i>Przeglądaj sale
+                    </a>
+                    @if (!User.Identity!.IsAuthenticated)
+                    {
+                        <a asp-controller="Account" asp-action="Register" class="btn btn-outline-light btn-lg">
+                            <i class="bi bi-person-plus me-2"></i>Zarejestruj się
+                        </a>
+                    }
+                    else
+                    {
+                        <a asp-controller="Reservations" asp-action="Create" class="btn btn-success btn-lg">
+                            <i class="bi bi-plus-circle me-2"></i>Zarezerwuj
+                        </a>
+                    }
+                </div>
+            </div>
+            <div class="col-lg-6 d-none d-lg-block text-center">
+                <i class="bi bi-calendar-check display-1" style="font-size: 12rem; opacity: 0.3;"></i>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="py-4 bg-light">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-md-4">
+                <div class="stat-card p-3">
+                    <i class="bi bi-door-open text-primary display-5"></i>
+                    <h3 class="mt-2 mb-0">@ViewBag.TotalRooms</h3>
+                    <p class="text-muted mb-0">Dostępnych sal</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card p-3">
+                    <i class="bi bi-calendar-check text-success display-5"></i>
+                    <h3 class="mt-2 mb-0">@ViewBag.TodayReservations</h3>
+                    <p class="text-muted mb-0">Rezerwacji dzisiaj</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card p-3">
+                    <i class="bi bi-clock text-info display-5"></i>
+                    <h3 class="mt-2 mb-0">24/7</h3>
+                    <p class="text-muted mb-0">Dostępność systemu</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Rooms Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold">Nasze Sale Konferencyjne</h2>
+            <p class="text-muted">Wybierz idealną przestrzeń dla swojego spotkania</p>
+        </div>
+        
+        <div class="row g-4">
+            @if (Model != null && Model.Any())
+            {
+                @foreach (var room in Model)
+                {
+                    <div class="col-md-6 col-lg-3">
+                        <div class="card room-card h-100 shadow-sm">
+                            @if (!string.IsNullOrEmpty(room.ImageUrl))
+                            {
+                                <img src="@room.ImageUrl" class="card-img-top" alt="@room.Name" 
+                                     style="height: 180px; object-fit: cover;">
+                            }
+                            else
+                            {
+                                <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" 
+                                     style="height: 180px;">
+                                    <i class="bi bi-building text-white display-3"></i>
+                                </div>
+                            }
+                            <div class="card-body">
+                                <h5 class="card-title">@room.Name</h5>
+                                <p class="card-text text-muted small">
+                                    @(room.Description.Length > 80 ? room.Description.Substring(0, 80) + "..." : room.Description)
+                                </p>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="badge bg-primary">
+                                        <i class="bi bi-people me-1"></i>@room.Capacity osób
+                                    </span>
+                                    <span class="text-success fw-bold">
+                                        @room.PricePerHour.ToString("C", new System.Globalization.CultureInfo("pl-PL"))/h
+                                    </span>
+                                </div>
+                                @if (room.RoomEquipments.Any())
+                                {
+                                    <div class="mb-2">
+                                        @foreach (var eq in room.RoomEquipments.Take(3))
+                                        {
+                                            <span class="badge bg-light text-dark me-1">
+                                                <i class="bi @eq.Equipment.IconClass"></i>
+                                            </span>
+                                        }
+                                        @if (room.RoomEquipments.Count > 3)
+                                        {
+                                            <span class="badge bg-light text-dark">+@(room.RoomEquipments.Count - 3)</span>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                            <div class="card-footer bg-transparent">
+                                <div class="d-grid gap-2">
+                                    <a asp-controller="Rooms" asp-action="Details" asp-route-id="@room.Id" 
+                                       class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-eye me-1"></i>Szczegóły
+                                    </a>
+                                    @if (User.Identity!.IsAuthenticated)
+                                    {
+                                        <a asp-controller="Reservations" asp-action="Create" asp-route-roomId="@room.Id" 
+                                           class="btn btn-primary btn-sm">
+                                            <i class="bi bi-calendar-plus me-1"></i>Zarezerwuj
+                                        </a>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="col-12 text-center py-5">
+                    <i class="bi bi-inbox display-1 text-muted"></i>
+                    <p class="text-muted mt-3">Brak dostępnych sal</p>
+                </div>
+            }
+        </div>
+        
+        <div class="text-center mt-4">
+            <a asp-controller="Rooms" asp-action="Index" class="btn btn-outline-primary btn-lg">
+                <i class="bi bi-grid me-2"></i>Zobacz wszystkie sale
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold">Jak to działa?</h2>
+            <p class="text-muted">Rezerwacja sali w 3 prostych krokach</p>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="text-center">
+                    <div class="step-circle bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                         style="width: 80px; height: 80px;">
+                        <i class="bi bi-search display-5"></i>
+                    </div>
+                    <h4>1. Wybierz salę</h4>
+                    <p class="text-muted">Przeglądaj dostępne sale i znajdź tę idealną dla Twoich potrzeb.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center">
+                    <div class="step-circle bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                         style="width: 80px; height: 80px;">
+                        <i class="bi bi-calendar-plus display-5"></i>
+                    </div>
+                    <h4>2. Zarezerwuj termin</h4>
+                    <p class="text-muted">Wybierz dogodny termin i wypełnij formularz rezerwacji.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center">
+                    <div class="step-circle bg-info text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                         style="width: 80px; height: 80px;">
+                        <i class="bi bi-check-circle display-5"></i>
+                    </div>
+                    <h4>3. Otrzymaj potwierdzenie</h4>
+                    <p class="text-muted">Po zatwierdzeniu przez administratora możesz korzystać z sali.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

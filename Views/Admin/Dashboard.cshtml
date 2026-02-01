@@ -1,0 +1,242 @@
+@model DashboardViewModel
+@{
+    ViewData["Title"] = "Panel administratora";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1><i class="bi bi-speedometer2 me-2"></i>Panel administratora</h1>
+            <p class="text-muted mb-0">Przegląd systemu rezerwacji sal konferencyjnych</p>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-sm-6 col-xl-3">
+            <div class="card bg-primary text-white shadow">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50">Wszystkie rezerwacje</h6>
+                            <h2 class="mb-0">@Model.TotalReservations</h2>
+                        </div>
+                        <i class="bi bi-calendar-check display-4 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card bg-warning text-dark shadow">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-dark opacity-75">Oczekujące</h6>
+                            <h2 class="mb-0">@Model.PendingReservations</h2>
+                        </div>
+                        <i class="bi bi-clock display-4 opacity-50"></i>
+                    </div>
+                </div>
+                <a asp-action="ManageReservations" asp-route-FilterStatus="@ReservationStatus.Pending" 
+                   class="card-footer text-dark text-decoration-none d-flex justify-content-between align-items-center">
+                    <span>Zobacz oczekujące</span>
+                    <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card bg-success text-white shadow">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50">Dzisiaj</h6>
+                            <h2 class="mb-0">@Model.TodayReservations</h2>
+                        </div>
+                        <i class="bi bi-calendar-day display-4 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card bg-info text-white shadow">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50">Przychód (miesiąc)</h6>
+                            <h2 class="mb-0">@Model.MonthlyRevenue.ToString("N0") zł</h2>
+                        </div>
+                        <i class="bi bi-cash-stack display-4 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Pending Reservations -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Oczekujące na zatwierdzenie</h5>
+                    <a asp-action="ManageReservations" asp-route-FilterStatus="@ReservationStatus.Pending" 
+                       class="btn btn-sm btn-outline-primary">Zobacz wszystkie</a>
+                </div>
+                <div class="card-body p-0">
+                    @if (Model.PendingReservationsList.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Tytuł</th>
+                                        <th>Sala</th>
+                                        <th>Data</th>
+                                        <th>Użytkownik</th>
+                                        <th>Akcje</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var res in Model.PendingReservationsList)
+                                    {
+                                        <tr>
+                                            <td>@res.Title</td>
+                                            <td>@res.Room?.Name</td>
+                                            <td>
+                                                @res.StartDate.ToString("dd.MM.yyyy")<br>
+                                                <small class="text-muted">@res.StartDate.ToString("HH:mm") - @res.EndDate.ToString("HH:mm")</small>
+                                            </td>
+                                            <td>@res.User?.FullName</td>
+                                            <td>
+                                                <form asp-action="UpdateReservationStatus" method="post" class="d-inline">
+                                                    <input type="hidden" name="Id" value="@res.Id" />
+                                                    <input type="hidden" name="NewStatus" value="@ReservationStatus.Approved" />
+                                                    <button type="submit" class="btn btn-success btn-sm" title="Zatwierdź">
+                                                        <i class="bi bi-check-lg"></i>
+                                                    </button>
+                                                </form>
+                                                <form asp-action="UpdateReservationStatus" method="post" class="d-inline">
+                                                    <input type="hidden" name="Id" value="@res.Id" />
+                                                    <input type="hidden" name="NewStatus" value="@ReservationStatus.Rejected" />
+                                                    <button type="submit" class="btn btn-danger btn-sm" title="Odrzuć">
+                                                        <i class="bi bi-x-lg"></i>
+                                                    </button>
+                                                </form>
+                                                <a asp-action="ReservationDetails" asp-route-id="@res.Id" 
+                                                   class="btn btn-outline-primary btn-sm" title="Szczegóły">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="bi bi-check-circle display-4 text-success"></i>
+                            <p class="mt-2 mb-0">Brak oczekujących rezerwacji</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-bar-chart me-2"></i>Statystyki</h5>
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-door-open me-2"></i>Aktywne sale</span>
+                        <span class="badge bg-primary rounded-pill">@Model.ActiveRooms / @Model.TotalRooms</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-people me-2"></i>Użytkownicy</span>
+                        <span class="badge bg-primary rounded-pill">@Model.TotalUsers</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-check-circle me-2"></i>Zatwierdzone</span>
+                        <span class="badge bg-success rounded-pill">@Model.ApprovedReservations</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-cash me-2"></i>Przychód całkowity</span>
+                        <span class="badge bg-info rounded-pill">@Model.TotalRevenue.ToString("N0") zł</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-lightning me-2"></i>Szybkie akcje</h5>
+                </div>
+                <div class="card-body d-grid gap-2">
+                    <a asp-action="ManageReservations" class="btn btn-outline-primary">
+                        <i class="bi bi-calendar3 me-2"></i>Zarządzaj rezerwacjami
+                    </a>
+                    <a asp-action="ManageRooms" class="btn btn-outline-primary">
+                        <i class="bi bi-door-closed me-2"></i>Zarządzaj salami
+                    </a>
+                    <a asp-action="CreateRoom" class="btn btn-outline-success">
+                        <i class="bi bi-plus-circle me-2"></i>Dodaj nową salę
+                    </a>
+                    <a asp-action="Users" class="btn btn-outline-secondary">
+                        <i class="bi bi-people me-2"></i>Użytkownicy
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Room Statistics -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-graph-up me-2"></i>Statystyki sal</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.RoomStatistics.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Sala</th>
+                                        <th>Liczba rezerwacji</th>
+                                        <th>Przychód</th>
+                                        <th>Wykres</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var stat in Model.RoomStatistics)
+                                    {
+                                        var maxCount = Model.RoomStatistics.Max(s => s.ReservationCount);
+                                        var percentage = maxCount > 0 ? (stat.ReservationCount * 100 / maxCount) : 0;
+                                        <tr>
+                                            <td><strong>@stat.RoomName</strong></td>
+                                            <td>@stat.ReservationCount</td>
+                                            <td>@stat.Revenue.ToString("C", new System.Globalization.CultureInfo("pl-PL"))</td>
+                                            <td style="width: 40%;">
+                                                <div class="progress">
+                                                    <div class="progress-bar bg-primary" style="width: @percentage%"></div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted text-center mb-0">Brak danych statystycznych</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

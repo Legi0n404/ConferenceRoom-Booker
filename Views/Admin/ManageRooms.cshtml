@@ -1,0 +1,99 @@
+@model List<Room>
+@{
+    ViewData["Title"] = "Zarządzanie salami";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1><i class="bi bi-door-closed me-2"></i>Zarządzanie salami</h1>
+            <p class="text-muted mb-0">Dodawaj, edytuj i zarządzaj salami konferencyjnymi</p>
+        </div>
+        <div>
+            <a asp-action="Dashboard" class="btn btn-outline-secondary me-2">
+                <i class="bi bi-arrow-left me-1"></i>Dashboard
+            </a>
+            <a asp-action="CreateRoom" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-1"></i>Dodaj salę
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        @foreach (var room in Model)
+        {
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 shadow-sm @(!room.IsActive ? "border-secondary opacity-75" : "")">
+                    @if (!string.IsNullOrEmpty(room.ImageUrl))
+                    {
+                        <img src="@room.ImageUrl" class="card-img-top" alt="@room.Name" style="height: 150px; object-fit: cover;">
+                    }
+                    else
+                    {
+                        <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" style="height: 150px;">
+                            <i class="bi bi-building text-white display-4"></i>
+                        </div>
+                    }
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title mb-0">@room.Name</h5>
+                            @if (!room.IsActive)
+                            {
+                                <span class="badge bg-secondary">Nieaktywna</span>
+                            }
+                        </div>
+                        <p class="card-text small text-muted">
+                            @(room.Description.Length > 80 ? room.Description.Substring(0, 80) + "..." : room.Description)
+                        </p>
+                        <div class="row text-center mb-2">
+                            <div class="col-4">
+                                <small class="text-muted d-block">Pojemność</small>
+                                <strong>@room.Capacity</strong>
+                            </div>
+                            <div class="col-4">
+                                <small class="text-muted d-block">Cena/h</small>
+                                <strong>@room.PricePerHour zł</strong>
+                            </div>
+                            <div class="col-4">
+                                <small class="text-muted d-block">Piętro</small>
+                                <strong>@room.Floor</strong>
+                            </div>
+                        </div>
+                        @if (room.RoomEquipments != null && room.RoomEquipments.Any())
+                        {
+                            <div class="mb-2">
+                                @foreach (var eq in room.RoomEquipments.Take(4))
+                                {
+                                    <span class="badge bg-light text-dark me-1">
+                                        <i class="bi @eq.Equipment?.IconClass"></i>
+                                    </span>
+                                }
+                                @if (room.RoomEquipments.Count > 4)
+                                {
+                                    <span class="badge bg-primary">+@(room.RoomEquipments.Count - 4)</span>
+                                }
+                            </div>
+                        }
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <div class="d-flex gap-2">
+                            <a asp-action="EditRoom" asp-route-id="@room.Id" class="btn btn-outline-primary btn-sm flex-fill">
+                                <i class="bi bi-pencil me-1"></i>Edytuj
+                            </a>
+                            <a asp-controller="Rooms" asp-action="Calendar" asp-route-id="@room.Id" 
+                               class="btn btn-outline-info btn-sm" target="_blank">
+                                <i class="bi bi-calendar3"></i>
+                            </a>
+                            <form asp-action="DeleteRoom" asp-route-id="@room.Id" method="post" class="d-inline"
+                                  onsubmit="return confirm('Czy na pewno chcesz dezaktywować tę salę?');">
+                                <button type="submit" class="btn btn-outline-danger btn-sm">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
